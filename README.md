@@ -9,7 +9,7 @@ does it with **Instagram's own API, for free**, from a small Node script with no
 Paste this into [Claude Code](https://claude.com/claude-code):
 
 ```text
-Clone https://github.com/machineroom-dev/instagram-comment-to-dm and follow its SETUP.md to set up comment-to-DM on my Instagram account. Use my Chrome for the Meta developer dashboard. Stop and hand over to me at every step marked "You do this manually", and never read or print my access token.
+Clone https://github.com/machineroom-dev/instagram-free-auto-dm and follow its SETUP.md to set up comment-to-DM on my Instagram account. Use my Chrome for the Meta developer dashboard. Stop and hand over to me at every step marked "You do this manually", and never read or print my access token.
 ```
 
 Claude Code clicks through the Meta developer dashboard in your Chrome (with the Claude in Chrome extension),
@@ -19,7 +19,7 @@ accept a tester invite on your phone, click **Generate token** and paste it into
 
 ## It worked? ⭐
 
-If a test comment got its DM, **[star the repo](https://github.com/machineroom-dev/instagram-comment-to-dm)**.
+If a test comment got its DM, **[star the repo](https://github.com/machineroom-dev/instagram-free-auto-dm)**.
 That's how other people find it, and it costs you nothing.
 
 ## What it does

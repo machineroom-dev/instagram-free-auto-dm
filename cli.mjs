@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// instagram-comment-to-dm: someone comments a keyword on your post and gets one DM with your link.
+// instagram-free-auto-dm: someone comments a keyword on your post and gets one DM with your link.
 //
 //   node cli.mjs auth                          paste your token (hidden), check it, store it in .state/token.json
 //   node cli.mjs whoami                        whose token it is and how many days it has left (never the token)

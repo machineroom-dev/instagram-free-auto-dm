@@ -1,12 +1,12 @@
 {
-  "name": "instagram-comment-to-dm",
+  "name": "instagram-free-auto-dm",
   "version": "1.0.0",
   "description": "Comment a keyword on your Instagram post, get a DM with the link. Free, on Instagram's own private replies API: runs on your computer or on a free Cloudflare Worker.",
   "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/machineroom-dev/instagram-comment-to-dm.git"
+    "url": "https://github.com/machineroom-dev/instagram-free-auto-dm.git"
   },
   "keywords": ["instagram", "comment-to-dm", "private-replies", "manychat-alternative", "instagram-api", "cloudflare-workers"],
   "engines": { "node": ">=20" },

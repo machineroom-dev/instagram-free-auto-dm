@@ -4,8 +4,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 
-export const LABEL = 'local.instagram-comment-to-dm';
-export const CRON_TAG = '# instagram-comment-to-dm';
+export const LABEL = 'local.instagram-free-auto-dm';
+export const CRON_TAG = '# instagram-free-auto-dm';
 export const INTERVAL_SEC = 300;
 
 const xml = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');

@@ -1,7 +1,7 @@
 // The Cloudflare Worker version (SETUP.md, part D2). Runs worker/index.mjs every 5 minutes on the Workers Free plan.
 // It has no URL: a cron trigger only. Funnels come from config.json, bundled at deploy time.
 {
-  "name": "instagram-comment-to-dm",
+  "name": "instagram-free-auto-dm",
   "main": "worker/index.mjs",
   "compatibility_date": "2026-11-01",
   "workers_dev": false,
