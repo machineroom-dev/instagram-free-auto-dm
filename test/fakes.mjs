@@ -1,6 +1,12 @@
 // Test doubles: a fake Instagram Graph API behind a mocked `fetch`, an in-memory ledger, and a fake Workers KV.
 // Every user and ID here is made up.
-import { IG_API } from '../src/meta.mjs';
+// Both of Meta's setups (src/meta.mjs): graph.instagram.com for Instagram-login tokens, graph.facebook.com/v27.0 for
+// Unified-login tokens (here: any token starting with UNI). Each host refuses the other kind with code 190, as Meta
+// does. The graph.facebook.com side follows Meta's Unified-login docs, not a recorded response.
+import { FB_API, IG_API } from '../src/meta.mjs';
+
+const FB_ORIGIN = new URL(FB_API).origin;
+const FB_PREFIX = new URL(FB_API).pathname.replace(/^\//, '') + '/';   // v27.0/
 
 export const ME = { id: '17840000000000001', username: 'demo.account' };
 export const NOW = Date.parse('2026-11-20T12:00:00Z');
@@ -16,28 +22,39 @@ const asError = (r) => (typeof r === 'object' ? metaErr(r.message ?? 'error', r.
 
 // comments: { [postId]: raw comments, newest first }. sendResults / replyResults: 'ok' or an error (a message,
 // or { message, code }), taken in turn; the last one repeats. refresh: 'ok' | 'refuse' | 'dead'.
-export function fakeMeta({ comments = {}, posts = [], pageSize = 50, sendResults = ['ok'], replyResults = ['ok'], refresh = 'ok', me = ME, readError = null } = {}) {
+// accounts: what graph.facebook.com/me/assigned_instagram_accounts lists for a Unified-login token.
+export function fakeMeta({ comments = {}, posts = [], pageSize = 50, sendResults = ['ok'], replyResults = ['ok'], refresh = 'ok', me = ME, readError = null, accounts = [me] } = {}) {
   const calls = [];
   const sends = [];
   const replies = [];
   let si = 0, ri = 0;
   async function fetchImpl(url, init = {}) {
     const u = new URL(url);
-    if (u.origin !== IG_API) throw new TypeError(`unexpected host ${u.origin}`);
+    const host = u.origin === IG_API ? 'ig' : u.origin === FB_ORIGIN ? 'fb' : null;
+    if (!host) throw new TypeError(`unexpected host ${u.origin}`);
     const method = init.method ?? 'GET';
-    const p = u.pathname.replace(/^\//, '');
+    let p = u.pathname.replace(/^\//, '');
+    if (host === 'fb') {
+      if (!p.startsWith(FB_PREFIX)) return metaErr(`unversioned path ${p}`, 100);
+      p = p.slice(FB_PREFIX.length);
+    }
     const q = Object.fromEntries(u.searchParams);
-    calls.push({ method, path: p, q });
+    calls.push({ host, method, path: p, q });
     if (!q.access_token) return metaErr('no token', 190, 401);
     if (q.access_token.startsWith('DEAD')) return metaErr('Error validating access token: the session has been invalidated', 190);
-    if (p === 'me') return json(200, { user_id: me.id, username: me.username });
-    if (p === 'refresh_access_token') {
+    if ((host === 'fb') !== q.access_token.startsWith('UNI')) return metaErr('Invalid OAuth access token - Cannot parse access token', 190);
+    // the account's own paths: `me` on graph.instagram.com, its ID on graph.facebook.com (where `me` is the system user)
+    const self = host === 'ig' ? 'me' : me.id;
+    if (host === 'fb' && p === 'me') return json(200, { id: '61500000000000001', name: 'Demo system user' });
+    if (host === 'fb' && p === 'me/assigned_instagram_accounts') return json(200, { data: accounts.map((a) => ({ id: a.id, username: a.username })) });
+    if (p === self) return json(200, host === 'ig' ? { user_id: me.id, username: me.username } : { id: me.id, username: me.username });
+    if (host === 'ig' && p === 'refresh_access_token') {
       if (refresh === 'refuse') return metaErr('refresh refused', 10);
       if (refresh === 'dead') return metaErr('session invalidated', 190);
       return json(200, { access_token: `${q.access_token}-R`, token_type: 'bearer', expires_in: 5184000 });
     }
-    if (p === 'me/media') return json(200, { data: posts });
-    if (p === 'me/messages' && method === 'POST') {
+    if (p === `${self}/media`) return json(200, { data: posts });
+    if (p === `${self}/messages` && method === 'POST') {
       const body = JSON.parse(init.body);
       const r = sendResults[Math.min(si++, sendResults.length - 1)];
       sends.push({ commentId: body.recipient.comment_id, text: body.message.text });
@@ -56,7 +73,8 @@ export function fakeMeta({ comments = {}, posts = [], pageSize = 50, sendResults
       const page = Number(q.after ?? 0);
       const data = all.slice(page * pageSize, (page + 1) * pageSize);
       const more = (page + 1) * pageSize < all.length;
-      return json(200, { data, ...(more ? { paging: { next: `${IG_API}/${list[1]}/comments?after=${page + 1}&access_token=${q.access_token}` } } : {}) });
+      const base = host === 'ig' ? IG_API : FB_API;
+      return json(200, { data, ...(more ? { paging: { next: `${base}/${list[1]}/comments?after=${page + 1}&access_token=${q.access_token}` } } : {}) });
     }
     return metaErr(`unknown path ${method} ${p}`, 100);
   }

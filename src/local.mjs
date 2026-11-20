@@ -7,8 +7,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { validateConfig } from './config.mjs';
-import { makeApi } from './meta.mjs';
-import { freshen } from './token.mjs';
+import { apiOpts, makeApi } from './meta.mjs';
+import { freshen, isExpired } from './token.mjs';
 import { runOnce, summaryLines } from './engine.mjs';
 
 export const LOCK_STALE_MS = 30 * 60e3;
@@ -70,9 +70,9 @@ export async function pollLocal({ dir, configPath, dryRun = false, fetchImpl, no
     let tok = loadToken(dir);
     if (!tok?.access_token) { log('no token yet: run npm run auth (SETUP.md, step B6)'); return 1; }
     if (tok.username !== config.account) { log(`the stored token is @${tok.username}, but config.json says "account": "${config.account}"`); return 1; }
-    const apiFor = (token) => makeApi({ token, fetchImpl });
+    const apiFor = (token, opts) => makeApi({ token, fetchImpl, ...opts });
     if (dryRun) {
-      if (Date.parse(tok.expiresAt) <= now()) { log(`the token expired ${tok.expiresAt}: run npm run auth`); return 1; }
+      if (isExpired(tok, now())) { log(`the token expired ${tok.expiresAt}: run npm run auth`); return 1; }
     } else {
       const r = await freshen(tok, { apiFor, now: now(), log });
       if (r.changed) { saveToken(dir, r.tok); log(`token renewed, now valid until ${r.tok.expiresAt}`); }
@@ -80,7 +80,7 @@ export async function pollLocal({ dir, configPath, dryRun = false, fetchImpl, no
     }
     const ledger = fileLedger(dir);
     log(`run ${new Date(now()).toISOString().replace(/\.\d{3}Z$/, 'Z')}${dryRun ? ' (dry run: nothing is sent or written)' : ''}`);
-    const sum = await runOnce({ config, api: apiFor(tok.access_token), ledger, userId: tok.userId, now, dryRun, sleep, log, ...(gapMs != null ? { gapMs } : {}) });
+    const sum = await runOnce({ config, api: apiFor(tok.access_token, apiOpts(tok)), ledger, userId: tok.userId, now, dryRun, sleep, log, ...(gapMs != null ? { gapMs } : {}) });
     printSummary(sum, log);
     if (!dryRun) fs.writeFileSync(files(dir).beat, JSON.stringify({ ...sum, wouldSend: undefined, wouldReply: undefined }, null, 2) + '\n');
     return sum.errors.length || sum.halted ? 1 : 0;

@@ -13,8 +13,8 @@
 //   token   the live access token + its expiry, refreshed here; never printed
 // Secret IG_TOKEN = the token you pasted locally (npm run worker:seed). When it changes, the Worker adopts it.
 import { validateConfig } from '../src/config.mjs';
-import { makeApi } from '../src/meta.mjs';
-import { adopt, freshen } from '../src/token.mjs';
+import { apiOpts, makeApi } from '../src/meta.mjs';
+import { adopt, freshen, isExpired } from '../src/token.mjs';
 import { runOnce, summaryLines } from '../src/engine.mjs';
 import { pruneRecords } from '../src/ledger.mjs';
 
@@ -66,7 +66,7 @@ export async function runWorker({ env, config: rawConfig, fetchImpl = (url, init
 
   if (config) {
     try {
-      const apiFor = (token) => makeApi({ token, fetchImpl, budget });
+      const apiFor = (token, opts) => makeApi({ token, fetchImpl, budget, ...opts });
       tok = await kv.get(TOKEN_KEY, 'json');
       const seed = env.IG_TOKEN ? String(env.IG_TOKEN).trim() : '';
       if (seed) {
@@ -83,10 +83,10 @@ export async function runWorker({ env, config: rawConfig, fetchImpl = (url, init
       if (live) {
         const r = await freshen(tok, { apiFor, now: t, log });
         if (r.changed) { tok = r.tok; await kv.put(TOKEN_KEY, JSON.stringify(tok)); log(`token renewed, valid until ${tok.expiresAt}`); }
-      } else if (Date.parse(tok.expiresAt) <= t) {
+      } else if (isExpired(tok, t)) {
         throw new Error(`the token expired ${tok.expiresAt}: generate a new one, npm run auth, npm run worker:seed`);
       }
-      sum = await runOnce({ config, api: apiFor(tok.access_token), ledger, userId: tok.userId, now, dryRun: !live, batchPending: true, maxPages: MAX_PAGES, readReserve: READ_RESERVE, sleep, log });
+      sum = await runOnce({ config, api: apiFor(tok.access_token, apiOpts(tok)), ledger, userId: tok.userId, now, dryRun: !live, batchPending: true, maxPages: MAX_PAGES, readReserve: READ_RESERVE, sleep, log });
       errors.push(...sum.errors);
     } catch (e) {
       errors.push(String(e?.message ?? e).slice(0, 300));
@@ -95,7 +95,7 @@ export async function runWorker({ env, config: rawConfig, fetchImpl = (url, init
 
   const summary = {
     at: iso(t), mode: live ? 'live' : 'dry-run',
-    token: tok ? { username: tok.username, expiresAt: tok.expiresAt, estimated: !!tok.estimated } : null,
+    token: tok ? { username: tok.username, login: tok.login ?? 'instagram', expiresAt: tok.expiresAt, estimated: !!tok.estimated } : null,
     funnels: sum?.funnels ?? [], sent: sum?.sent ?? 0, failed: sum?.failed ?? 0, replied: sum?.replied ?? 0, halted: sum?.halted ?? 0,
     capped: sum?.capped ?? false, unknown: sum?.unknown ?? 0, wouldSend: (sum?.wouldSend ?? []).slice(0, 20), errors,
     callsLeft: budget.left, records: state.records.length,

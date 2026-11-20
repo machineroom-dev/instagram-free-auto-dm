@@ -17,6 +17,11 @@ adds the permissions, takes the app live and writes your config. You do the few 
 accept a tester invite on your phone, click **Generate token** and paste it into your own terminal. Every step in
 [SETUP.md](SETUP.md) says which kind it is. Prefer doing it by hand? SETUP.md works as a plain checklist too.
 
+A Meta app created today also needs a free **business portfolio** (Meta Business Suite) and uses Meta's
+**Unified login**. The script supports it, but that path is so far tested against Meta's documentation with mocked
+API calls only, not yet with a real DM. Older apps with **Instagram login** are tested end to end. See
+[Meta's limits](#metas-limits).
+
 ## It worked? ⭐
 
 If a test comment got its DM, **[star the repo](https://github.com/machineroom-dev/instagram-free-auto-dm)**.
@@ -30,7 +35,8 @@ That's how other people find it, and it costs you nothing.
 - Then it replies under the comment with one of your short lines, taking them in turn so it doesn't look like spam.
 - **One DM per person per post, never twice.** Every send is written to a ledger *before* the request goes out and
   again after, so a crash can't make it DM someone a second time.
-- It renews its own access token when fewer than 10 days are left. Nobody refreshes anything by hand.
+- Nothing to renew by hand. A new app's token (Unified login) doesn't expire. An older app's 60-day token
+  (Instagram login) renews itself when fewer than 10 days are left. `npm run auth` tells the two apart.
 - It stops a post's funnel instead of failing over and over: when the very first DM your account ever sends fails
   (usually a missing permission), or after 3 failed DMs in a row. `status` tells you why; `resume` restarts it.
 - Your own comments are skipped, and so are comments older than Meta's 7-day window.
@@ -106,7 +112,7 @@ gets them on `npm run worker:deploy`.
 | | |
 |---|---|
 | `npm run auth` | Paste your token (hidden while you paste). Checked and stored in `.state/token.json`, mode 600. |
-| `npm run whoami` | Whose token it is and how many days it has left. Never prints the token. |
+| `npm run whoami` | Whose token it is, which login it is from, and how long it lasts. Never prints the token. |
 | `npm run check` | Check `config.json`, list the funnels. |
 | `npm run posts` | Your latest posts with their media IDs. |
 | `npm run comments -- <post>` | Read-only: a post's comments, which match, which were answered. |
@@ -127,10 +133,17 @@ gets them on `npm run worker:deploy`.
 - **750 private replies an hour** per account. The script sends at most 60 a run, so 720 an hour.
 - **DM text up to 1,000 bytes.**
 - **Instagram professional accounts only** (Creator or Business). Switching is free, in the Instagram app.
-- **Standard Access is enough** for your own account: no App Review. But the app must be **published (Live)**. In
-  development mode the API returns no comments from anyone without a role on the app, so the script sees nothing.
-- **The token lasts 60 days** and renews itself here. A password change or a Meta security reset kills it at once
-  (error code 190): generate a new one and run `npm run auth` again.
+- **New apps need a business portfolio.** Since late 2026 a new Meta app only offers **Unified login**
+  (`graph.facebook.com`), and that setup only appears for apps owned by a business portfolio. The portfolio is
+  free, but it cannot be created from a Facebook profile whose payment account is disabled. Older apps may still
+  have **Instagram login** (`graph.instagram.com`), which needs no portfolio. The script works with either.
+- **Standard Access is enough** for your own account: no App Review, no business verification. But the app must be
+  **published (Live)**. In development mode the API returns no comments from anyone without a role on the app, so
+  the script sees nothing (measured on Instagram login).
+- **The token.** Unified login gives a system-user token that, by Meta's default, **doesn't expire**. Instagram
+  login gives a **60-day** token that renews itself here. Either one dies at once on a password change, a Meta
+  security reset or removing the account from the app (error code 190): generate a new one and run
+  `npm run auth` again.
 - The first DM from an account someone doesn't follow lands in their **Message requests**. The public reply tells
   them to look.
 

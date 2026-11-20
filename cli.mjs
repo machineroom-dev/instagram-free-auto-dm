@@ -21,8 +21,8 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { appendRecord, loadConfig, loadToken, pollLocal, readHeartbeat, readRecords, readSecret, saveToken } from './src/local.mjs';
-import { makeApi } from './src/meta.mjs';
-import { adopt, daysLeft, freshen } from './src/token.mjs';
+import { apiOpts, makeApi } from './src/meta.mjs';
+import { adopt, freshen, tokenLife } from './src/token.mjs';
 import { keywordMatches, REPLY_WINDOW_MS } from './src/match.mjs';
 import { listComments } from './src/engine.mjs';
 import { dmCounts, haltOf, lastDm, mergeRecords, repliedCount, unknownSends } from './src/ledger.mjs';
@@ -109,20 +109,22 @@ try {
   if (cmd === 'auth') {
     const { config } = loadConfig(CONFIG);   // optional here: SETUP stores the token before config.json exists
     const raw = await readSecret('Paste the token from the Meta dashboard (it stays hidden while you paste), then press Enter:\n> ');
-    const tok = await adopt(raw, { account: config?.account ?? null, apiFor: (token) => makeApi({ token }), now: Date.now() });
+    const tok = await adopt(raw, { account: config?.account ?? null, apiFor: (token, opts) => makeApi({ token, ...opts }), now: Date.now() });
     saveToken(DATA, tok);
-    console.log(`Stored the token for @${tok.username}. Valid ${tok.estimated ? 'about ' : ''}${daysLeft(tok, Date.now())} days; it renews itself when under 10 days are left.`);
+    console.log(tok.login === 'unified'
+      ? `Stored the token for @${tok.username} (Unified login). It does not expire; nothing to renew.`
+      : `Stored the token for @${tok.username} (Instagram login). Valid ${tokenLife(tok, Date.now())}; it renews itself when under 10 days are left.`);
   } else if (cmd === 'whoami') {
     const tok = await tokenOrDie();
-    const me = await makeApi({ token: tok.access_token }).me();
-    console.log(`@${me.username} (Instagram user ${me.userId}); token valid ${tok.estimated ? 'about ' : ''}${daysLeft(tok, Date.now())} days, renews itself under 10`);
+    const me = await makeApi({ token: tok.access_token, ...apiOpts(tok) }).me();
+    console.log(`@${me.username} (Instagram user ${me.userId}); token ${tokenLife(tok, Date.now())}${tok.login === 'unified' ? '' : ', renews itself under 10'}`);
   } else if (cmd === 'check') {
     const config = configOrDie();
     console.log(`config.json is fine: account @${config.account}, ${config.funnels.length} funnel(s)`);
     for (const f of config.funnels) console.log(`  ${f.name}: post ${f.post}, keywords ${f.keywords.join(', ')}, DM ${new TextEncoder().encode(f.message).length}/1000 bytes, ${f.replies.length} public reply line(s)${f.until ? `, until ${f.until}` : ''}`);
   } else if (cmd === 'posts') {
     const tok = await tokenOrDie();
-    const posts = await makeApi({ token: tok.access_token }).posts(Number(flags.limit) || 25);
+    const posts = await makeApi({ token: tok.access_token, ...apiOpts(tok) }).posts(Number(flags.limit) || 25);
     for (const p of posts) console.log(`${p.id}  ${String(p.timestamp ?? '').slice(0, 10)}  ${(p.media_product_type ?? '').padEnd(5)}  ${String(p.comments_count ?? '?').padStart(4)} comments  ${p.permalink ?? ''}  ${(p.caption ?? '').replace(/\s+/g, ' ').slice(0, 50)}`);
     if (!posts.length) console.log('(no posts returned)');
   } else if (cmd === 'comments') {
@@ -131,7 +133,7 @@ try {
     const f = findFunnel(config, key);
     const post = f?.post ?? (/^\d+$/.test(key) ? key : die(`no funnel named "${key}" in config.json`, 1));
     const tok = await tokenOrDie();
-    const { comments } = await listComments(makeApi({ token: tok.access_token }), post, { now: Date.now() });
+    const { comments } = await listComments(makeApi({ token: tok.access_token, ...apiOpts(tok) }), post, { now: Date.now() });
     const last = lastDm(readRecords(DATA));
     const match = { maxWords: config?.maxWords, askWords: config?.askWords };
     console.log(`post ${post}: ${comments.length} comment(s), replies included${f ? `; keywords ${f.keywords.join('/')}` : '; not in config.json, so nothing is matched'}`);
@@ -149,7 +151,7 @@ try {
     const records = readRecords(DATA);
     const tok = loadToken(DATA);
     const beat = readHeartbeat(DATA);
-    console.log(tok ? `token: @${tok.username}, ${tok.estimated ? 'about ' : ''}${daysLeft(tok, Date.now())} days left (renews itself under 10)` : 'token: none yet (npm run auth)');
+    console.log(tok ? `token: @${tok.username}, ${tokenLife(tok, Date.now())}${tok.login === 'unified' ? '' : ' (renews itself under 10)'}` : 'token: none yet (npm run auth)');
     console.log(beat ? `last run: ${beat.at} (${ago(beat.at)}): ${beat.sent} sent, ${beat.failed} failed, ${beat.replied} replied${beat.errors?.length ? `; errors: ${beat.errors.join(' | ')}` : ''}` : 'last run: never (npm run poll, or npm run timer:install)');
     for (const l of funnelLines(config, records, Date.now())) console.log(l);
     for (const l of unknownLines(records)) console.log(l);
@@ -188,7 +190,7 @@ try {
       const s = state.summary;
       if (!s) { console.log('the Worker has not written anything yet (deployed? the cron runs every 5 minutes)'); process.exit(0); }
       console.log(`Worker, ${s.mode}: last summary ${s.savedAt ?? s.at} (${ago(s.savedAt ?? s.at)}; written on any change, else hourly)`);
-      console.log(s.token ? `token: @${s.token.username}, ${s.token.estimated ? 'about ' : ''}${daysLeft(s.token, Date.now())} days left` : 'token: none adopted yet (npm run worker:seed)');
+      console.log(s.token ? `token: @${s.token.username}, ${tokenLife(s.token, Date.now())}` : 'token: none adopted yet (npm run worker:seed)');
       for (const l of funnelLines(config, state.records ?? [], Date.now())) console.log(l);
       for (const c of s.wouldSend ?? []) console.log(`    dry run, would DM @${c.username} (comment ${c.commentId}): "${c.text}"`);
       for (const l of unknownLines(state.records ?? [], true)) console.log(l);
