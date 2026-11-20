@@ -227,6 +227,8 @@ time. Nothing else is installed.
    to the Worker as the secret `IG_TOKEN`, and nothing is printed.
 5. **Claude does this.** Wait for the next 5-minute mark, then `npm run worker:status`. It shows the token's
    username and how long it lasts, and any "would DM" lines. `npm run worker:tail` streams the Worker's log live.
+   A new cron trigger can take up to 15 minutes before its first run: until then status says the Worker hasn't
+   run yet. (Measured: deployed and seeded at :35, the :40 run was skipped, the first run came at :45.)
 6. **Claude does this, after asking.** Go live:
    - if the local timer is installed: `npm run timer:remove`, and then `npm run worker:import`, which copies the local
      ledger to the Worker so nobody answered locally is answered again;

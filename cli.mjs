@@ -80,6 +80,8 @@ function wrangler(args, opts = {}) {
 function remoteState() {
   const r = wrangler(['kv', 'key', 'get', 'state', '--binding', 'STATE', '--remote']);
   const out = r.stdout ?? '';
+  // Before the Worker's first run the key does not exist, and wrangler reports that as a failed fetch (404), not as a value.
+  if (r.status !== 0 && /404|not found/i.test(`${r.stderr ?? ''}${out}`)) return { v: 1, records: [], summary: null };
   if (r.status !== 0) die(`wrangler kv key get failed:\n${(r.stderr || out).trim()}`, 1);
   const a = out.indexOf('{'); const b = out.lastIndexOf('}');
   if (a < 0) return { v: 1, records: [], summary: null };   // "Value not found": nothing written yet
@@ -188,7 +190,7 @@ try {
       const config = configOrDie();
       const state = remoteState();
       const s = state.summary;
-      if (!s) { console.log('the Worker has not written anything yet (deployed? the cron runs every 5 minutes)'); process.exit(0); }
+      if (!s) { console.log('The Worker has not run yet. A new cron trigger can take up to 15 minutes before its first run; after that it runs every 5 minutes. Not deployed yet? npm run worker:deploy'); process.exit(0); }
       console.log(`Worker, ${s.mode}: last summary ${s.savedAt ?? s.at} (${ago(s.savedAt ?? s.at)}; written on any change, else hourly)`);
       console.log(s.token ? `token: @${s.token.username}, ${tokenLife(s.token, Date.now())}` : 'token: none adopted yet (npm run worker:seed)');
       for (const l of funnelLines(config, state.records ?? [], Date.now())) console.log(l);
