@@ -1,0 +1,7 @@
+# your funnels and everything the script writes (token, ledger, logs) stay on your machine
+config.json
+.state/
+.wrangler/
+.dev.vars
+node_modules/
+.DS_Store

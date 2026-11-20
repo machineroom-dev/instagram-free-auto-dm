@@ -1,0 +1,15 @@
+// The Cloudflare Worker version (SETUP.md, part D2). Runs worker/index.mjs every 5 minutes on the Workers Free plan.
+// It has no URL: a cron trigger only. Funnels come from config.json, bundled at deploy time.
+{
+  "name": "instagram-comment-to-dm",
+  "main": "worker/index.mjs",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": false,
+  "preview_urls": false,
+  "triggers": { "crons": ["*/5 * * * *"] },
+  // npm run worker:kv prints the id to put here
+  "kv_namespaces": [{ "binding": "STATE", "id": "PUT_YOUR_KV_NAMESPACE_ID_HERE" }],
+  // "dry-run" reads comments and logs what it would send, and sends nothing. Switch to "live" once the dry run looks right.
+  "vars": { "MODE": "dry-run" },
+  "observability": { "enabled": true }
+}

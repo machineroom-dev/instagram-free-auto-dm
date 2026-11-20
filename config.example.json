@@ -1,0 +1,13 @@
+{
+  "account": "your_instagram_username",
+  "funnels": [
+    {
+      "name": "free-guide",
+      "post": "17900000000000001",
+      "keywords": ["GUIDE", "GUIDES"],
+      "message": "Here's the guide from the post: https://example.com/guide\n\nThanks for watching!",
+      "replies": ["Sent! Check your DMs 📩", "Done, it's in your DMs 📩", "Check your message requests 📩"],
+      "until": "2026-12-31"
+    }
+  ]
+}

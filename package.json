@@ -1,0 +1,34 @@
+{
+  "name": "instagram-comment-to-dm",
+  "version": "1.0.0",
+  "description": "Comment a keyword on your Instagram post, get a DM with the link. Free, on Instagram's own private replies API: runs on your computer or on a free Cloudflare Worker.",
+  "type": "module",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/machineroom-dev/instagram-comment-to-dm.git"
+  },
+  "keywords": ["instagram", "comment-to-dm", "private-replies", "manychat-alternative", "instagram-api", "cloudflare-workers"],
+  "engines": { "node": ">=20" },
+  "scripts": {
+    "test": "node --test test/*.test.mjs",
+    "auth": "node cli.mjs auth",
+    "whoami": "node cli.mjs whoami",
+    "check": "node cli.mjs check",
+    "posts": "node cli.mjs posts",
+    "comments": "node cli.mjs comments",
+    "dry-run": "node cli.mjs poll --dry-run",
+    "poll": "node cli.mjs poll",
+    "status": "node cli.mjs status",
+    "timer:install": "node cli.mjs timer install",
+    "timer:remove": "node cli.mjs timer remove",
+    "worker:login": "npx --yes wrangler@4.158.0 login",
+    "worker:kv": "npx --yes wrangler@4.158.0 kv namespace create STATE",
+    "worker:dev": "npx --yes wrangler@4.158.0 dev --test-scheduled",
+    "worker:deploy": "node cli.mjs check && npx --yes wrangler@4.158.0 deploy",
+    "worker:seed": "node cli.mjs worker seed",
+    "worker:status": "node cli.mjs worker status",
+    "worker:import": "node cli.mjs worker import",
+    "worker:tail": "npx --yes wrangler@4.158.0 tail"
+  }
+}
