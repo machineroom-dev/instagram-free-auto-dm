@@ -1,0 +1,116 @@
+{
+  "canvas": "poster",
+  "template": "flow-grid",
+  "title": "How a comment becomes a DM",
+  "subtitle": "Every 5 minutes, on Instagram's own API",
+  "panels": [
+    {
+      "grid": {
+        "cols": 4,
+        "rows": 2
+      },
+      "nodes": [
+        {
+          "id": "follower",
+          "icon": "user",
+          "name": "Follower",
+          "cell": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": "post",
+          "icon": "phone",
+          "name": "Your post",
+          "cell": [
+            1,
+            0
+          ]
+        },
+        {
+          "id": "script",
+          "icon": "code-window",
+          "name": "This script",
+          "sub": "keyword match",
+          "cell": [
+            2,
+            0
+          ]
+        },
+        {
+          "id": "ledger",
+          "icon": "database",
+          "name": "Ledger",
+          "sub": "never DMs twice",
+          "cell": [
+            3,
+            0
+          ]
+        },
+        {
+          "id": "dms",
+          "icon": "phone",
+          "name": "Their DMs",
+          "sub": "your link arrives",
+          "cell": [
+            0,
+            1
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "label": "INSTAGRAM",
+          "nodes": [
+            "follower",
+            "post",
+            "dms"
+          ],
+          "color": "violet"
+        },
+        {
+          "label": "YOUR COMPUTER OR A FREE WORKER",
+          "nodes": [
+            "script",
+            "ledger"
+          ],
+          "color": "primary"
+        }
+      ],
+      "steps": [
+        {
+          "n": 1,
+          "from": "follower",
+          "to": "post",
+          "label": "comments \"GUIDE\""
+        },
+        {
+          "n": 2,
+          "from": "post",
+          "to": "script",
+          "label": "new comments"
+        },
+        {
+          "n": 3,
+          "from": "script",
+          "to": "ledger",
+          "label": "before + after"
+        },
+        {
+          "n": 4,
+          "from": "script",
+          "to": "dms",
+          "label": "private reply: the DM"
+        },
+        {
+          "n": 5,
+          "from": "script",
+          "to": "post",
+          "label": "public reply",
+          "reply": true
+        }
+      ]
+    }
+  ]
+}

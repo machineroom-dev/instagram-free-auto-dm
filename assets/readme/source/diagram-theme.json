@@ -1,0 +1,43 @@
+{
+  "name": "machine-room-dark",
+  "mode": "dark",
+  "style": "filled",
+  "radius": 13,
+  "lineWeight": 3,
+  "font": {
+    "family": "InterV",
+    "file": "fonts/InterVariable.woff2"
+  },
+  "brand": {
+    "footer": "Machine Room"
+  },
+  "colors": {
+    "bg": "#0B1012",
+    "panel": "#141C1F",
+    "panelStroke": "#26343A",
+    "ink": "#E9EFEC",
+    "muted": "#93A4A7",
+    "line": "#E9EFEC",
+    "outline": "#E9EFEC",
+    "paper": "#1B2529",
+    "neutral": "#3A4A50",
+    "dark": "#0B1012",
+    "primary": "#4169E1",
+    "primaryDark": "#2A47A8",
+    "tint": "#26355A",
+    "amber": "#F2B544",
+    "hit": "#C6F73F",
+    "hitText": "#C6F73F",
+    "miss": "#D97757",
+    "missText": "#E58B6C",
+    "badge": "#C6F73F",
+    "badgeText": "#0B1012",
+    "accent": "#C6F73F",
+    "brand": "#93A4A7",
+    "groupText": "#8FA9F5",
+    "sideA": "#4169E1",
+    "sideATint": "#182330",
+    "sideB": "#C6F73F",
+    "sideBTint": "#1D2721"
+  }
+}

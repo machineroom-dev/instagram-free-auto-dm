@@ -1,0 +1,59 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="400" viewBox="0 0 1200 400" role="img" aria-labelledby="title desc">
+  <title id="title">instagram-free-auto-dm</title>
+  <desc id="desc">Someone comments GUIDE on your Instagram post. They get a public reply, "Sent! Check your DMs", and a direct message with your link. Free, on Instagram's own API.</desc>
+
+  <!-- Machine Room palette: bg #0B1012, panel #141C1F, rule #26343A, ink #E9EFEC, muted #93A4A7,
+       blue #4169E1 / #2A47A8, lime #C6F73F (the keyword, the one accent) -->
+  <rect width="1200" height="400" rx="24" fill="#0B1012"/>
+  <rect x="0.5" y="0.5" width="1199" height="399" rx="23.5" fill="none" stroke="#26343A"/>
+
+  <g id="title-block" transform="translate(64 0)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+    <text x="0" y="86" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="18" fill="#93A4A7" letter-spacing="0.5">machineroom-dev / <tspan fill="#E9EFEC">instagram-free-auto-dm</tspan></text>
+
+    <text x="0" y="162" font-size="52" font-weight="700" fill="#E9EFEC" letter-spacing="-1">Comment <tspan fill="#C6F73F">GUIDE</tspan>,</text>
+    <text x="0" y="222" font-size="52" font-weight="700" fill="#E9EFEC" letter-spacing="-1">get the link in DMs.</text>
+
+    <text x="0" y="276" font-size="22" fill="#93A4A7">Free comment-to-DM on Instagram's own API.</text>
+    <text x="0" y="306" font-size="22" fill="#93A4A7">Runs on your computer or a free Cloudflare Worker.</text>
+
+    <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="17" fill="#93A4A7">
+      <rect x="0" y="334" width="112" height="30" rx="15" fill="none" stroke="#26343A"/>
+      <text x="56" y="354" text-anchor="middle">node ≥ 20</text>
+      <rect x="124" y="334" width="164" height="30" rx="15" fill="none" stroke="#26343A"/>
+      <text x="206" y="354" text-anchor="middle">0 dependencies</text>
+      <rect x="300" y="334" width="72" height="30" rx="15" fill="none" stroke="#26343A"/>
+      <text x="336" y="354" text-anchor="middle">MIT</text>
+    </g>
+  </g>
+
+  <!-- The thing the script makes: a comment, the public reply under it, and the DM. Text from config.example.json. -->
+  <g id="project-proof" transform="translate(712 36)" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif">
+    <rect width="440" height="328" rx="20" fill="#141C1F" stroke="#26343A"/>
+
+    <text x="24" y="38" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" fill="#93A4A7" letter-spacing="1.5">COMMENTS</text>
+
+    <!-- the comment -->
+    <circle cx="42" cy="78" r="18" fill="#6E56CF"/>
+    <text x="72" y="72" font-size="18" font-weight="700" fill="#E9EFEC">sam.makes</text>
+    <rect x="72" y="80" width="74" height="28" rx="6" fill="#C6F73F"/>
+    <text x="109" y="101" text-anchor="middle" font-size="20" font-weight="800" fill="#0B1012">GUIDE</text>
+    <text x="154" y="101" font-size="20" fill="#E9EFEC">pls</text>
+
+    <!-- the public reply -->
+    <path d="M42 104 V128 Q42 138 52 138 H62" fill="none" stroke="#26343A" stroke-width="2"/>
+    <circle cx="86" cy="146" r="14" fill="#4169E1"/>
+    <text x="110" y="141" font-size="18" font-weight="700" fill="#E9EFEC">you</text>
+    <text x="110" y="166" font-size="20" fill="#E9EFEC">Sent! Check your DMs 📩</text>
+
+    <line x1="24" y1="196" x2="416" y2="196" stroke="#26343A"/>
+
+    <!-- the DM -->
+    <text x="24" y="228" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="15" fill="#93A4A7" letter-spacing="1.5">DIRECT MESSAGE</text>
+    <rect x="286" y="211" width="130" height="24" rx="12" fill="none" stroke="#C6F73F"/>
+    <text x="351" y="228" text-anchor="middle" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14" fill="#C6F73F">within 5 min</text>
+
+    <rect x="40" y="246" width="376" height="62" rx="20" fill="#2A47A8"/>
+    <text x="62" y="272" font-size="19" fill="#FFFFFF">Here's the guide from the post:</text>
+    <text x="62" y="296" font-size="19" fill="#C6F73F" text-decoration="underline">example.com/guide</text>
+  </g>
+</svg>

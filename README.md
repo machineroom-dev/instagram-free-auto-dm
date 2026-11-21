@@ -1,15 +1,33 @@
-# Instagram comment-to-DM
+<p align="center">
+  <img src="assets/readme/hero.svg" width="100%" alt="instagram-free-auto-dm: someone comments GUIDE on your Instagram post, gets a public reply saying Sent! Check your DMs, and a DM with your link. Free, on Instagram's own API.">
+</p>
+
+<p align="center">
+  <a href="#set-it-up-with-one-prompt"><b>Set it up</b></a> ·
+  <a href="#what-it-does">What it does</a> ·
+  <a href="#matching">Matching</a> ·
+  <a href="#configjson">config.json</a> ·
+  <a href="#commands">Commands</a> ·
+  <a href="#metas-limits">Meta's limits</a>
+</p>
 
 Someone comments a keyword on your post. Within five minutes they get a DM with your link, and a reply under
 their comment ("Sent! Check your DMs 📩") so they know to look. That's what ManyChat and similar tools sell. This
 does it with **Instagram's own API, for free**, from a small Node script with no dependencies.
+
+<p align="center">
+  <img src="assets/readme/how-it-works.gif" width="100%" alt="How a comment becomes a DM. 1: a follower comments GUIDE on your post. 2: every 5 minutes the script reads the new comments. 3: it writes the send to a ledger before and after, so nobody gets two DMs. 4: it sends the DM as Instagram's private reply. 5: it posts a public reply under the comment.">
+</p>
 
 ## Set it up with one prompt
 
 Paste this into [Claude Code](https://claude.com/claude-code):
 
 ```text
-Clone https://github.com/machineroom-dev/instagram-free-auto-dm and follow its SETUP.md to set up comment-to-DM on my Instagram account. Use my Chrome for the Meta developer dashboard. Stop and hand over to me at every step marked "You do this manually", and never read or print my access token.
+Clone https://github.com/machineroom-dev/instagram-free-auto-dm and follow its SETUP.md
+to set up comment-to-DM on my Instagram account. Use my Chrome for the Meta developer
+dashboard. Stop and hand over to me at every step marked "You do this manually", and
+never read or print my access token.
 ```
 
 Claude Code clicks through the Meta developer dashboard in your Chrome (with the Claude in Chrome extension),
@@ -17,10 +35,11 @@ adds the permissions, takes the app live and writes your config. You do the few 
 accept a tester invite on your phone, click **Generate token** and paste it into your own terminal. Every step in
 [SETUP.md](SETUP.md) says which kind it is. Prefer doing it by hand? SETUP.md works as a plain checklist too.
 
-A Meta app created today also needs a free **business portfolio** (Meta Business Suite) and uses Meta's
-**Unified login**. The script supports it, but that path is so far tested against Meta's documentation with mocked
-API calls only, not yet with a real DM. Older apps with **Instagram login** are tested end to end. See
-[Meta's limits](#metas-limits).
+> [!NOTE]
+> A Meta app created today also needs a free **business portfolio** (Meta Business Suite) and uses Meta's
+> **Unified login**. The script supports it, but that path is so far tested against Meta's documentation with
+> mocked API calls only, not yet with a real DM. Older apps with **Instagram login** are tested end to end. See
+> [Meta's limits](#metas-limits).
 
 ## It worked? ⭐
 
@@ -29,35 +48,45 @@ That's how other people find it, and it costs you nothing.
 
 ## What it does
 
-- Every 5 minutes it reads the new comments on the posts you list in `config.json`.
-- A comment that asks (your keyword, see [Matching](#matching)) gets **one DM** with your message: Instagram's
-  *private reply* to that comment.
-- Then it replies under the comment with one of your short lines, taking them in turn so it doesn't look like spam.
-- **One DM per person per post, never twice.** Every send is written to a ledger *before* the request goes out and
-  again after, so a crash can't make it DM someone a second time.
-- Nothing to renew by hand. A new app's token (Unified login) doesn't expire. An older app's 60-day token
+- **Reads every 5 minutes.** New comments on the posts you list in `config.json`.
+- **One DM per asking comment.** A comment that asks (your keyword, see [Matching](#matching)) gets **one DM**
+  with your message: Instagram's *private reply* to that comment.
+- **A public reply, so they look.** Then it replies under the comment with one of your short lines, taking them
+  in turn so it doesn't look like spam.
+- **One DM per person per post, never twice.** Every send is written to a ledger *before* the request goes out
+  and again after, so a crash can't make it DM someone a second time.
+- **Nothing to renew by hand.** A new app's token (Unified login) doesn't expire. An older app's 60-day token
   (Instagram login) renews itself when fewer than 10 days are left. `npm run auth` tells the two apart.
-- It stops a post's funnel instead of failing over and over: when the very first DM your account ever sends fails
-  (usually a missing permission), or after 3 failed DMs in a row. `status` tells you why; `resume` restarts it.
-- Your own comments are skipped, and so are comments older than Meta's 7-day window.
-
-```text
-  comment "GUIDE"           every 5 min                      Instagram API
-  ───────────────►  read new comments ──► match? ──► private reply (the DM) ──► public reply under the comment
-                                          │                 │
-                                          └── ledger: pending before, outcome after, one DM per person per post
-```
+- **Stops instead of failing over and over.** A post's funnel halts when the very first DM your account ever
+  sends fails (usually a missing permission), or after 3 failed DMs in a row. `status` tells you why; `resume`
+  restarts it.
+- **Skips what it shouldn't answer.** Your own comments, and comments older than Meta's 7-day window.
 
 ## Two ways to run it
 
-| | **Your computer** (`npm run timer:install`) | **Cloudflare Worker** (`npm run worker:deploy`) |
+| | 💻 **Your computer** | ☁️ **Cloudflare Worker** |
 |---|---|---|
+| Start | `npm run timer:install` | `npm run worker:deploy` |
 | Runs | launchd (macOS) or cron (Linux), every 5 min | a cron trigger on Cloudflare, every 5 min |
 | Needs | the computer on and awake | a free Cloudflare account |
 | Cost | $0 | $0 on the Workers Free plan |
 | State | `.state/` in this folder | one KV namespace |
 
-Use one or the other, never both at once (SETUP.md, part D, shows how to move from one to the other).
+> [!WARNING]
+> Use one or the other, never both at once. SETUP.md, part D, shows how to move from one to the other.
+
+<details>
+<summary><b>Does it fit in Workers Free?</b> Cloudflare's limits, and how a run stays inside them</summary>
+<br>
+
+100,000 requests a day, **50 subrequests a run** (Workers KV calls count too), **10 ms CPU a run** (time spent
+waiting on the network doesn't count), 5 cron triggers per account, and Workers KV at 1,000 writes a day. A 5-minute
+cron is 288 runs a day. Each run gets 45 Instagram calls and at most 5 KV operations. It writes its ledger only
+when it sends something (twice: before and after), plus a short summary at most once an hour, so even a run that
+sends every 5 minutes stays near 600 writes a day. A run reads the newest 250 comments of each post. When more
+people ask than one run can answer, the rest go out 5 minutes later, oldest comment first.
+
+</details>
 
 ## Matching
 
@@ -70,8 +99,9 @@ A comment matches when **both** are true:
    `pdf`, `sheet`, `dm`, `send`, `share`, `link`, `please`, `pls`, `plz`). Without this, a keyword that is also
    your topic ("rebase" on a git post) DMs people who are only talking to each other.
 
-Tips: pick a keyword people won't write by accident, and list spelling variants (`["GUIDE", "GUIDES"]`). On an
-"A vs B" post people comment both words, so list both from the start.
+> [!TIP]
+> Pick a keyword people won't write by accident, and list spelling variants (`["GUIDE", "GUIDES"]`). On an
+> "A vs B" post people comment both words, so list both from the start.
 
 ## config.json
 
@@ -147,23 +177,16 @@ gets them on `npm run worker:deploy`.
 - The first DM from an account someone doesn't follow lands in their **Message requests**. The public reply tells
   them to look.
 
-## Cloudflare's limits (Workers Free)
-
-100,000 requests a day, **50 subrequests a run** (Workers KV calls count too), **10 ms CPU a run** (time spent
-waiting on the network doesn't count), 5 cron triggers per account, and Workers KV at 1,000 writes a day. A 5-minute
-cron is 288 runs a day. Each run gets 45 Instagram calls and at most 5 KV operations. It writes its ledger only
-when it sends something (twice: before and after), plus a short summary at most once an hour, so even a run that
-sends every 5 minutes stays near 600 writes a day. A run reads the newest 250 comments of each post. When more
-people ask than one run can answer, the rest go out 5 minutes later, oldest comment first.
-
 ## Safety notes
 
 - The token never leaves your machine except to Meta, and to Cloudflare if you choose the Worker. No command prints
   it, and error messages strip it from URLs.
 - `.state/`, `config.json` and `.dev.vars` are git-ignored. Don't commit them.
 - A corrupt ledger line stops every run rather than being skipped: a ledger read as empty would DM everyone again.
-- Remove any other comment-to-DM tool (ManyChat, etc.) from the same post. Instagram allows one private reply per
-  comment, and the two would race for it.
+
+> [!IMPORTANT]
+> Remove any other comment-to-DM tool (ManyChat, etc.) from the same post. Instagram allows one private reply per
+> comment, and the two would race for it.
 
 ## Privacy policy
 
